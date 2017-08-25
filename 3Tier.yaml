@@ -1,10 +1,10 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: 2017-08-25
 Description: >-
   AWS CloudFormation Sample Template AutoScalingMultiAZSample: Create a
   multi-az, load balanced and Auto Scaled sample web site running on an Apache
   Web Server with PHP. The application is configured to span all Availability
-  Zones in the region. The instances are load balanced with a simple health check against
-  the default web page. 
+  Zones in the region. The instances are load balanced with a simple health
+  check against the default web page. 
 Parameters:
   InstanceType:
     Description: WebServer EC2 instance type
@@ -15,7 +15,7 @@ Parameters:
       - t2.micro
       - t2.small
       - t2.medium
-    ConstraintDescription: must be a valid EC2 instance type.  
+    ConstraintDescription: must be a valid EC2 instance type.
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -86,12 +86,9 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig
       MinSize: '2'
-      MaxSize: '3'
+      MaxSize: '4'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: f1891d9c-b11f-4a4d-82f6-dfe0e8795ccf
   LaunchConfig:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
@@ -145,7 +142,6 @@ Resources:
               httpd: []
               php: []
               php-mysql: []
-              puppet: []
           files:
             /var/www/html/index.php:
               content: !Join 
@@ -190,7 +186,7 @@ Resources:
                           print "Server = " . $hostname . "<br />";
                   - |2
                           ?>
-                  - |2                  
+                  - |2
                       </body>
                   - |
                     </html>
@@ -210,6 +206,52 @@ Resources:
                 ensureRunning: 'true'
                 files:
                   - /etc/httpd/conf/httpd.conf
+  WebServerScaleUpPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup
+      Cooldown: '60'
+      ScalingAdjustment: '1'
+  WebServerScaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
+  CPUAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '2'
+      Threshold: '90'
+      AlarmActions:
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: GreaterThanThreshold
+  CPUAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '2'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: LessThanThreshold
   ElasticLoadBalancer:
     Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
     Properties:
@@ -248,7 +290,7 @@ Resources:
       DBName: tonydeloitte
       Engine: MySQL
       DBSecurityGroups:
-       - Ref: DBSecurityGroup
+        - !Ref DBSecurityGroup
       MasterUsername: tonydeloitte
       MasterUserPassword: tonydeloitte
   DBSecurityGroup:
@@ -256,8 +298,7 @@ Resources:
     Properties:
       GroupDescription: Frontend Access
       DBSecurityGroupIngress:
-        EC2SecurityGroupName:
-          Ref: InstanceSecurityGroup
+        EC2SecurityGroupName: !Ref InstanceSecurityGroup
 Outputs:
   WebsiteURL:
     Value: !GetAtt 
