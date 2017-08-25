@@ -15,3 +15,4 @@ The yaml template takes Stack Name, Instance type and SSH Key as Input. Cloudfor
 3. AutoScaling Up/Down
 4. Security Groups 
 
+[Infrastruture](./Infra.jpg)
