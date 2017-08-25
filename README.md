@@ -4,9 +4,9 @@ The three tire infrastructure has an ELB, Apache Web Server and a RDS Database. 
 
 ### Instructions
 
-The yaml template takes Stack Name, Instance type and SSH Key as Input. Cloudformation creates a 3 Tier architecture with Elastic Load Balancer accepting connections to port 80, Apache Web Server EC2 Instances would serve the requests through the Elastic Load Balancer and Apache Web Server will connect to the RDS Database for data.   
+The yaml template takes Stack Name, Instance type and SSH Key as Input. Cloudformation creates a 3 Tier architecture with Elastic Load Balancer accepting HTTP connections using port 80, Apache Web Server EC2 Instances would serve the requests through the Elastic Load Balancer and Apache Web Server will connect to the RDS Database for data.   
 
-*Output : Provides an Elastic Load Balancer URL that displays a Sample PHP App that has the Instance Hostname of the instance the page is being serverd from.* 
+*Output : Provides an Elastic Load Balancer URL that displays a Sample PHP App that has the Instance Hostname of the EC2 instance the page is being serverd from.* 
 
 ## Best Practices Used
 
